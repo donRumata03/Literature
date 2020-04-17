@@ -2,13 +2,15 @@
 
 #include "pch.h"
 
+#include <basic_parser.h>
+#include "word_util.h"
 
 inline vector<string> lemmatize_words(const string& text, light_language& lang, vector<string>& unknown_words, const bool debug_words = false)
 {
 	auto raw_words = parse_data(text);
 	cout << "Parsed data!" << endl;
 	vector<string> words(raw_words.size());
-	copy_if(raw_words.begin(), raw_words.end(), words.begin(), [](string& s) {return (s != "-") && (!if_is_word_english(s)); });
+	copy_if(raw_words.begin(), raw_words.end(), words.begin(), [](const string& s) {return (s != "-") && (!is_english(s)); });
 
 	vector<string> real_words;
 	real_words.reserve(words.size());

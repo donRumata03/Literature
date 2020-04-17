@@ -11,15 +11,18 @@ struct word_top_output_descriptor
 
 struct common_word_top
 {
-	light_language& lang;
+	light_language* lang = nullptr;
 	unordered_map<string, size_t> frequencies;
 	unordered_map<string, size_t> unknown_words;
-	size_t total_words;
+	size_t total_words = 0;
 
+
+	common_word_top() = default;
+	explicit common_word_top(light_language* _lang) : lang(_lang) {}
+	void assign_lang(light_language* _lang) { lang = _lang; }
 	
-	explicit common_word_top(light_language& _lang) : lang(_lang), total_words(0) {}
-
 	void add_data(const string& text);
+	void add_data(const vector<string>& parsed_words);
 	void add_file_data(const vector<string>& paths, bool allow_threading = false, size_t thread_number = 12);
 
 	[[nodiscard]] vector<pair<string, size_t>> get_sorted_words() const;

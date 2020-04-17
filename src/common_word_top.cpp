@@ -10,7 +10,7 @@ void common_word_top::add_data(const string& text)
 	vector<string> parsed_words;
 	try {
 		// cout << "Started lemmatization!" << endl;
-		parsed_words = lemmatize_words(text, lang, for_unknowns, true);
+		parsed_words = lemmatize_words(text, *lang, for_unknowns, true);
 	} catch(exception& e)
 	{
 		// cout << "Error occured!" << endl;
@@ -18,21 +18,23 @@ void common_word_top::add_data(const string& text)
 		return;
 	}
 
+	for (auto& w : for_unknowns)
+	{
+		++unknown_words[w];
+	}
 	
+	add_data(parsed_words);	
+}
+
+void common_word_top::add_data(const vector<string>& parsed_words)
+{
 	for (auto& w : parsed_words)
 	{
 		++frequencies[w];
 	}
 
 	total_words += parsed_words.size();
-	
-	for (auto& w : for_unknowns)
-	{
-		++unknown_words[w];
-	}
-	
 }
-
 
 void thread_word_top_making_function(const vector<string>& paths, const pair<size_t, size_t>& range, common_word_top& res)
 {

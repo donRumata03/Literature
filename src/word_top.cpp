@@ -1,9 +1,11 @@
 #include "pch.h"
 #include "word_top.h"
 #include "word_util.h"
-#include "literature_parser.h"
+// #include "literature_parser.h"
 
 using namespace std;
+
+/*
 
 void word_top::cook_top(const vector<string>& words)
 {
@@ -102,7 +104,9 @@ word_top::word_top(const string& s, light_language& _lang, bool debug_words)
 	}
 }
 
+*/
 
+/*
 void word_top::print_first(const int n)
 {
 	cout << "Max word length: " << max_word_length << endl;
@@ -139,38 +143,75 @@ void word_top::print_word_type_distribution()
 	}
 }
 
+*/
 
-double word_top::meaning_dist(word_top& t1, word_top& t2, word_top& common_top,
-                              double common_pow, double diff_pow)
+void word_top::add_to_distribution(const vector<string>& parsed_words)
+{
+	for (auto& str_word : parsed_words)
+	{
+		max_word_length = max(max_word_length, str_word.size());
+
+		// Try to find information from language:
+		auto word_data = lang->get_word_variations(str_word);
+		if (word_data)
+		{
+			++word_type_distribution[word_data->operator[](0)->word_type];
+		}
+	}
+}
+
+
+void word_top::add_words_with_info(const string& text)
+{
+	vector<string> for_unknowns;
+	vector<string> parsed_words;
+	try {
+		parsed_words = lemmatize_words(text, *lang, for_unknowns, true);
+	}
+	catch (exception& e)
+	{
+		cout << e.what() << endl;
+		return;
+	}
+
+	add_words_with_info(parsed_words, for_unknowns);
+}
+
+void word_top::add_words_with_info(const vector<string>& parsed_words, const vector<string>& unknowns)
+{
+	for (auto& w : unknowns)
+	{
+		++unknown_words[w];
+	}
+
+	add_data(parsed_words);
+	add_to_distribution(parsed_words);
+}
+
+// Distance functions:
+
+double word_top::meaning_dist(word_top& t1, word_top& t2, common_word_top& common_top,
+                              const double common_pow, const double diff_pow)
 {
 	unordered_set<string> words;
-	for (const auto& p : t1.data)
-	{
-		words.insert(p.first);
-	}
-	for (const auto& p : t2.data)
-	{
-		words.insert(p.first);
-	}
+	for (const auto& p : t1.frequencies) words.insert(p.first);
+	for (const auto& p : t2.frequencies) words.insert(p.first);
 
 	double difference = 0;
 
 	for (const auto& word : words)
 	{
-		auto fnd1 = t1.data.find(word);
-		uint64_t times_in_1 = (fnd1 == t1.data.end()) ? (0) : fnd1->second;
-
-		auto fnd2 = t2.data.find(word);
-		uint64_t times_in_2 = (fnd2 == t2.data.end()) ? (0) : fnd2->second;
+		double log_common_percent = log(common_top.get_percent_word_frequency(word));
 		
-		size_t common_times = common_top.data[word];
-		
-		double percent_in_1 = double(times_in_1) / t1.data.size();
-		double percent_in_2 = double(times_in_2) / t2.data.size();
+		double log_percent_1 = log(t1.get_percent_word_frequency(word));
+		double log_percent_2 = log(t2.get_percent_word_frequency(word));
 
-
+		double freq_diff = log_percent_1 - log_percent_2;
 		
-		difference += square(percent_in_1 - percent_in_2);
+		double tf = sgn(freq_diff) * pow(abs(freq_diff), diff_pow);
+		double df = sgn(log_common_percent) * pow(abs(log_common_percent), common_pow);
+		
+		difference += tf / df;
 	}
 	return difference;
 }
@@ -182,7 +223,7 @@ double word_top::grammar_dist(word_top& t1, word_top& t2)
 	double word_type_difference = 0;
 
 	set<word_types> word_type_buff;
-	int sigma1 = 0, sigma2 = 0;
+	double sigma1 = 0, sigma2 = 0;
 	for (auto& s : t1.word_type_distribution)
 	{
 		word_type_buff.insert(s.first);
@@ -197,12 +238,12 @@ double word_top::grammar_dist(word_top& t1, word_top& t2)
 
 	for (word_types this_type : word_type_buff)
 	{
-		int val1 = (t1.word_type_distribution.find(this_type) != t1.word_type_distribution.end())
+		size_t val1 = (t1.word_type_distribution.find(this_type) != t1.word_type_distribution.end())
 			           ? (t1.word_type_distribution[this_type])
-			           : (0);
-		int val2 = (t2.word_type_distribution.find(this_type) != t2.word_type_distribution.end())
+			           : (size_t(0));
+		size_t val2 = (t2.word_type_distribution.find(this_type) != t2.word_type_distribution.end())
 			           ? (t2.word_type_distribution[this_type])
-			           : (0);
+			           : (size_t(0));
 
 		double percent1 = double(val1) / sigma1, percent2 = double(val2) / sigma2;
 

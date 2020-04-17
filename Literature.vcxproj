@@ -159,6 +159,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\common_word_top.cpp" />
+    <ClCompile Include="src\Library.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\model_error_function.cpp" />
     <ClCompile Include="src\pch.cpp">
@@ -170,8 +171,10 @@
     <ClCompile Include="src\word_top_usage.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\artwork_structs.h" />
     <ClInclude Include="include\common_word_top.h" />
     <ClInclude Include="include\lemmatizator.h" />
+    <ClInclude Include="include\Library.h" />
     <ClInclude Include="include\model_error_function.h" />
     <ClInclude Include="include\pch.h" />
     <ClInclude Include="include\threading_test.h" />
