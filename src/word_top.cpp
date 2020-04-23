@@ -145,6 +145,12 @@ void word_top::print_word_type_distribution()
 
 */
 
+void word_top::from_serialization(const string& data_path, const string& metadata_path)
+{
+	load_metadata_from_file(metadata_path);
+	load_from_file(data_path);
+}
+
 void word_top::add_to_distribution(const vector<string>& parsed_words)
 {
 	for (auto& str_word : parsed_words)
@@ -188,6 +194,19 @@ void word_top::add_words_with_info(const vector<string>& parsed_words, const vec
 	add_to_distribution(parsed_words);
 }
 
+void word_top::load_metadata_from_file(const string& filename)
+{
+	vector<string> readed_data = split_lines(readFile(filename));
+	for (auto& str_data : Slice(readed_data, 0, noslice)) {
+		size_t this_freq = 0;
+		stringstream ss;
+		ss << split(str_data)[1];
+		ss >> this_freq;
+		
+		pair<word_types, size_t> distr_data = { string_to_word_type_converter[split(str_data)[0]], this_freq };
+		word_type_distribution.insert(distr_data);
+	}
+}
 // Distance functions:
 
 double word_top::meaning_dist(word_top& t1, word_top& t2, common_word_top& common_top,

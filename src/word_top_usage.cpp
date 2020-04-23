@@ -72,8 +72,11 @@ vector<double> generate_tolstoy_ya_freqs()
 		artwork.top
 	}
 	*/
-	lib.make_all_author_tops(tolstoy_ptr);
+	lib.make_one_author_all_tops(tolstoy_ptr);
 
+	// TODO! Make weights proportional to length of text!!!!!!!!!
+
+	
 	return {}; // TODO!
 }
 

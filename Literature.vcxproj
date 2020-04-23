@@ -167,6 +167,9 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="src\suspicious_file_detector.cpp" />
+    <ClCompile Include="src\Vocab_research.cpp" />
+    <ClCompile Include="src\word_frequency_research.cpp" />
     <ClCompile Include="src\word_top.cpp" />
     <ClCompile Include="src\word_top_usage.cpp" />
   </ItemGroup>
@@ -177,7 +180,10 @@
     <ClInclude Include="include\Library.h" />
     <ClInclude Include="include\model_error_function.h" />
     <ClInclude Include="include\pch.h" />
+    <ClInclude Include="include\suspicious_file_detector.h" />
     <ClInclude Include="include\threading_test.h" />
+    <ClInclude Include="include\Vocab_research.h" />
+    <ClInclude Include="include\word_frequency_research.h" />
     <ClInclude Include="include\word_top.h" />
     <ClInclude Include="include\word_top_usage.h" />
     <ClInclude Include="src\tests.h" />

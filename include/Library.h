@@ -2,12 +2,22 @@
 #include "pch.h"
 
 #include <artwork_structs.h>
-
+#include "suspicious_file_detector.h"
 
 inline string default_language_name = R"(D:\Projects\Language\res\dictionary.txt)";
 inline string default_metadata_json_name = R"(D:\Projects\Literature_parser\system\best_book_data.json)";
 inline string default_literature_base_path = R"(D:\Literature_data\All_books)";
 inline string default_wiki_data_name = R"(D:\Projects\Literature_downloading\cp1251_res\wiki_data.json)";
+
+
+inline size_t default_min_artwork_byte_size = 100000; // 100 kBytes by default
+inline size_t default_min_good_author_artwork_number = 10;
+
+
+struct loading_requirements {
+	size_t big_good_artworks_requirement = default_min_good_author_artwork_number; // Good <==> not english, not poem, big
+	size_t min_n_artworks_byte_size = default_min_artwork_byte_size;
+};
 
 
 
@@ -35,15 +45,15 @@ struct Library
 	loading_state good_text_loading_state = loading_state::not_loaded;
 	
 	light_language* lang = nullptr;
+	bool lang_was_loaded_by_me = false;
 
 private:
 	mt19937 generator;
-	bool author_satisfies_requirements(author_books* author, size_t min_artworks, size_t big_artworks_requirement = 2, size_t min_n_artworks_byte_size = 100000); // 100 kBytes by default
 public:
 	// Some OOP stuff:
 	
 	Library() { random_device rd; generator = mt19937(rd()); }
-	explicit Library(light_language& _lang) : Library() { lang = &_lang; }
+	explicit Library(light_language& _lang) : Library() { if (lang_was_loaded_by_me) delete lang; lang_was_loaded_by_me = false; lang = &_lang; }
 
 	Library(const Library& lib) = delete;
 	Library(Library&& lib) = delete;
@@ -51,7 +61,7 @@ public:
 	Library& operator =(const Library& other) = delete;
 	Library& operator =(Library&& other) = delete;
 	
-	~Library() { delete lang; }
+	~Library() { if (lang_was_loaded_by_me) delete lang; }
 
 
 	
@@ -61,7 +71,7 @@ public:
 	 *			   !
 	*/
 	
-	void load_language(const string& filename = default_language_name) { lang = new light_language(filename); }
+	void load_language(const string& filename = default_language_name) { lang = new light_language(filename); lang_was_loaded_by_me = true; }
 	void assign_lang(light_language* _lang) { lang = _lang; }
 	
 	void load_metadata_from_json(const string& filename = default_metadata_json_name);
@@ -79,33 +89,75 @@ public:
 	bool ensure_wiki_data_loaded(const string& filename = default_wiki_data_name);
 
 	void load_all_texts(bool include_parsing);
-	void load_good_texts(bool include_parsing);
+	void load_good_texts(bool include_parsing, const loading_requirements& req);
 
 	bool ensure_all_texts_loaded(bool include_parsing);
 	bool ensure_good_texts_loaded(bool include_parsing);
 
-
 	void ensure_one_author_loaded(author_books* author);
+
+	void load_tops(const loading_requirements& req = {0, 0});
+	void init();
+	
+	// Deletions:
+	void delete_author_big_raw_content(author_books* author);
+	void delete_all_big_raw_content();
+
+	
 	/*
 	 *			Generating 
 	 *			  authors
 	 */
 
-	author_books* generate_author(bool demand_good = true, 
-		size_t min_artworks = 3, size_t min_big_artworks = 2, size_t min_n_artworks_byte_size = 100000); // TODO! Make probability proportional to the number of artworks
 
-	pair<author_books*, author_books*> generate_different_authors(bool demand_good = true);
+	author_books* generate_author(bool demand_good = true, const loading_requirements& req = {}); // TODO! Make probability proportional to the length = number * size of artworks
 
-	artwork_file* generate_author_artwork(author_books* author);
-	artwork_file* generate_author_artwork(const string& author) { return get_author_by_name(author) ? generate_author_artwork(get_author_by_name(author)) : nullptr ; };
+	pair<author_books*, author_books*> generate_different_authors(bool demand_good = true, const loading_requirements& req = {});
 
-	pair<artwork_file*, artwork_file*> generate_one_author_different_artworks(bool demand_good = true);
-	pair< artwork_file*, artwork_file*> generate_different_authors_artworks(bool demand_good = true);
+	artwork_file* generate_author_artwork(author_books* author, const loading_requirements& req);
+	artwork_file* generate_author_artwork(const string& author, const loading_requirements& req) { return get_author_by_name(author) ? generate_author_artwork(get_author_by_name(author), req) : nullptr ; };
+
+	pair<artwork_file*, artwork_file*> generate_one_author_different_artworks(bool demand_good = true, const loading_requirements& req = {});
+	pair< artwork_file*, artwork_file*> generate_different_authors_artworks(bool demand_good = true, const loading_requirements& req = {});
 
 	vector<string> generate_all_artwork_paths();
 	
-	// Top making:
-	void make_all_author_tops(author_books* author);
+	/*
+	 *			Making
+	 *			 tops
+	*/
+	
+	void make_one_author_all_tops(author_books* author, const loading_requirements& req = {}, size_t cutting_number = 3);
+	vector<double> make_author_freqs(author_books* author, const string& word);
+
+	void all_cycle_make_author_tops(author_books* author, const loading_requirements& req); 
+
+	void multithread_load_tops(bool demand_good = true, const loading_requirements& req = {}, size_t thread_number = std::thread::hardware_concurrency() - 2);
+	void multithread_load_tops(const vector< author_books* >& authors, const loading_requirements& req = {}, size_t thread_number = std::thread::hardware_concurrency() - 2);
+	
+	/*
+	 *			   Artwork
+	 *			 Requirements
+	*/
+
+	bool author_satisfies_requirements(author_books* author, const loading_requirements& req);
+	bool artwork_satisfies_requirements(artwork_file* artwork, const loading_requirements& req);
+
+	vector<author_books*> get_good_authors(const loading_requirements& req = {});
+	vector<artwork_file*> get_good_artworks(author_books* author, const loading_requirements& req = {});
+	vector<artwork_file*> get_all_good_artworks(const loading_requirements& req = {});
+	
+	void process_good_authors_engpoemness(const loading_requirements& req = {});
 };
 
+
+constexpr auto all_common_word_top_path = R"(D:\Literature_data\temp\common_word_top.txt)";
+
+#define load_library() \
+	Library lib; \
+	lib.ensure_metadata_is_loaded(); \
+	lib.ensure_wiki_data_loaded(); \
+	lib.load_language(); \
+	common_word_top all_top; \
+	all_top.load_from_file(all_common_word_top_path);
 

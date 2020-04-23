@@ -25,6 +25,9 @@ struct common_word_top
 	void add_data(const vector<string>& parsed_words);
 	void add_file_data(const vector<string>& paths, bool allow_threading = false, size_t thread_number = 12);
 
+	void cut(size_t min_freq = 3);
+	[[nodiscard]] size_t different_words() const { return frequencies.size(); }
+
 	[[nodiscard]] vector<pair<string, size_t>> get_sorted_words() const;
 	[[nodiscard]] vector<pair<string, size_t>> get_sorted_unknown_words() const;
 
@@ -34,8 +37,10 @@ struct common_word_top
 	void store_to_file(const string& filename) const;
 	void load_from_file(const string& filename);
 
+	pair<string, size_t> most_frequent_word();
+	
 	[[nodiscard]] size_t get_abs_word_frequency(const string& w) const;
-	[[nodiscard]] size_t get_percent_word_frequency(const string& w) const { return get_abs_word_frequency(w) / total_words; }
+	[[nodiscard]] double get_percent_word_frequency(const string& w) const { return double(get_abs_word_frequency(w)) / total_words; }
 
 	void merge(const common_word_top& other);
 private:

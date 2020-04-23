@@ -43,7 +43,7 @@ double literature_fitness_function(const std::function<double(pair<artwork_file*
 
 	// Count averages:
 	double log_one_average = average(one_author_cleared);
-	double log_different_average = average(one_author_cleared);
+	double log_different_average = average(different_authors_cleared);
 
 	// Exponentiate
 	double one_average = exp(log_one_average);

@@ -99,8 +99,8 @@ inline void test_multi_text()
 		one_threads.push_back({ this_times, this_times / one_thread_performance });
 		multi_threads.push_back({ this_times,  this_times / multi_thread_performance });
 	}
-	add_to_plot(one_threads);
-	add_to_plot(multi_threads);
+	add_to_plot(one_threads, { "One thread" });
+	add_to_plot(multi_threads, { "Different threads" });
 
 	show_plot();
 }

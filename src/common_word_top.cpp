@@ -81,6 +81,22 @@ void common_word_top::add_file_data(const vector<string>& paths, const bool allo
 	}
 }
 
+void common_word_top::cut(const size_t min_freq)
+{
+	for (auto it = frequencies.cbegin(); it != frequencies.cend();)
+	{
+		if (it->second < min_freq)
+		{
+			frequencies.erase(it++);
+			total_words--;
+		}
+		else
+		{
+			++it;
+		}
+	}
+}
+
 vector<pair<string, size_t>> common_word_top::get_sorted_words() const
 {
 	return get_sorted_elements(unknown_words);
@@ -136,6 +152,17 @@ void common_word_top::load_from_file(const string& filename)
 		frequencies[line_els[0]] += this_freq;
 		total_words += this_freq;
 	}
+}
+
+pair<string, size_t> common_word_top::most_frequent_word()
+{
+	pair<string, size_t> best_pair;
+	for (auto p : frequencies)
+	{
+		if (p.second > best_pair.second) best_pair = p;
+	}
+
+	return best_pair;
 }
 
 

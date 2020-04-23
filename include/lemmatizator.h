@@ -8,7 +8,7 @@
 inline vector<string> lemmatize_words(const string& text, light_language& lang, vector<string>& unknown_words, const bool debug_words = false)
 {
 	auto raw_words = parse_data(text);
-	cout << "Parsed data!" << endl;
+	// cout << "Parsed data!" << endl;
 	vector<string> words(raw_words.size());
 	copy_if(raw_words.begin(), raw_words.end(), words.begin(), [](const string& s) {return (s != "-") && (!is_english(s)); });
 

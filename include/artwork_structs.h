@@ -15,9 +15,16 @@ struct artwork_file
 	string folder_path;
 	string file_path;
 	size_t file_size = 0;
-	bool loaded = false;
 	string author_name;
 	string author_path;
+
+	string top_path;
+	string top_meta_path;
+	
+	string parsed_path;
+
+	bool is_poem = false;
+	bool is_english = false;
 };
 
 struct author_books
@@ -26,6 +33,7 @@ struct author_books
 	string path;
 	Json descriptor;
 	vector<artwork_file> artworks;
+	size_t total_size = 0;
 };
 
 
